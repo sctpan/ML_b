@@ -2,7 +2,7 @@ from django.shortcuts import render,get_object_or_404
 from .models import Video
 from .forms import VideoForm
 import cv2
-from .CarmaCam.model._yolo import YoloDetector
+#from .CarmaCam.model._yolo import YoloDetector
 from django.conf import settings
 from PIL import Image
 import json
