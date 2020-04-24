@@ -78,6 +78,25 @@
           </div>
         </div>
     </div>
+
+    <div class="modal fade" id="videoModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+          <!--Content-->
+          <div class="modal-content">
+            <!--Body-->
+            <div class="modal-body mb-0 p-0">
+              <div class="embed-responsive embed-responsive-16by9 z-depth-1-half">
+                <iframe id="video-frame" class="embed-responsive-item" src="" allowfullscreen></iframe>
+              </div>
+            </div>
+            <!--Footer-->
+            <div class="modal-footer justify-content-center">            
+              <button onclick="closeVideoModal()" type="button" class="btn btn-outline-primary btn-rounded btn-md ml-4">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+  
     
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -94,11 +113,7 @@
             console.log("ready");
             $("#loading-spinner").hide();
          });
-
-        
-
-         
-        
+  
         function search() {
             $(".content").empty();
             videos_list = []
@@ -123,9 +138,10 @@
 
         function generateTable() {
             let buttons = $("<div class='btns'></div>");
-            let btn1 = "<button type='button' class='btn btn-danger' style='margin-right: 10px'>Select All</button>";
-            let btn2 = "<button type='button' class='btn btn-success'>Import Selected videos</button>"
-            buttons.append(btn1, btn2);
+            let btn1 = "<button onclick='selectAll()' type='button' class='btn btn-danger' style='margin-right: 10px'>Select All</button>";
+            let btn2 = "<button onclick='disselectAll()' type='button' class='btn btn-secondary' style='margin-right: 10px'>Cancel Selection</button>";
+            let btn3 = "<button onclick='importSelectedVideos()' type='button' class='btn btn-success'>Import Selected videos</button>"
+            buttons.append(btn1, btn2, btn3);
             let table = $("<table class='table table-hover'></table>");
             let tableHead = $("<thead><tr><th scope='col'>Select</th><th scope='col'>video</th><th scope='col'>uploaded by</th><th scope='col'>upload date</th><th scope='col'>action</th></tr></thead>");
             let tableBody = $("<tbody></tbody>")
@@ -133,7 +149,7 @@
                 let video = videos_list[i];
                 let row = $("<tr></tr>");
                 let checkbox = $("<td class='align-middle'><input value=' " + i + "' type='checkbox'/></td>");
-                let content = $("<td class='align-middle'>" + video.id.$oid + "</td><td class='align-middle'>" + video.user + "</td><td class='align-middle'>" + video.created + "</td>")
+                let content = $("<td class='align-middle'>" + "<a href='javascript:preview(" + i + ");'>" + video.id.$oid + "</a></td><td class='align-middle'>" + video.user + "</td><td class='align-middle'>" + video.created + "</td>")
                 let editBtn = $("<td><button onclick='edit(" + i + ")' class='btn btn-primary' data-toggle='modal' data-target='#editModal'>Edit</button></td>");
                 row.append(checkbox, content, editBtn);   
                 tableBody.append(row);
@@ -156,6 +172,62 @@
             videos_list[currentIndex].title = $(".modal-body #title").val()
             videos_list[currentIndex].description = $(".modal-body #description").val()
         }
+
+        function selectAll() {
+            $("input[type=checkbox]").prop('checked', true);
+        }
+
+        function disselectAll() {
+            $("input[type=checkbox]").prop('checked', false);
+        }
+
+        function preview(index) {
+            $('#videoModal').modal('show');
+            let currentVideo = videos_list[index];
+            $("#video-frame").attr("src", "/videos/preview/?id=" + currentVideo.id.$oid);
+        }
+
+        function closeVideoModal() {
+            $("#video-frame").attr("src", "");
+            $('#videoModal').modal('hide');
+        }
+
+        function getSelectedVideos() {
+            var import_videos_list = []
+            $("input[type=checkbox]").each(function() {
+                if($(this).prop('checked')) {
+                    let index = parseInt($(this).val())
+                    if(videos_list[index].title == undefined || videos_list[index].title == null) {
+                        videos_list[index].title = videos_list[index].id.$oid;
+                        videos_list[index].description = "Imported from carmacam database";
+                    }
+                    import_videos_list.push(videos_list[index])
+                }
+            });
+            // console.log(import_videos_list.length)
+            // console.log(import_videos_list[0])
+            return import_videos_list
+        }
+
+        function importSelectedVideos() {
+            var import_videos_list = getSelectedVideos();
+            importVideo(import_videos_list, 0);
+        }
+
+        function importVideo(import_videos_list, index) {
+            if(index == import_videos_list.length) {
+                return;
+            }
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: data,
+                success: success,
+                dataType: dataType
+            });
+        }
+
+        
 
         
 

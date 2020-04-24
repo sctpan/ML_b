@@ -9,6 +9,9 @@ import json
 import os
 from .mongoUtils import MongoUtils
 from django.http import JsonResponse
+from django.http import HttpResponse
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+
 
 # Create your views here.
 def  video_detail_view(request, video_id):
@@ -65,6 +68,18 @@ def get_account_videos(request):
         "videos_list": videos
     }
     return JsonResponse(context)
+
+@xframe_options_sameorigin
+def get_video(request):
+    mongoUtils = MongoUtils()
+    id = request.GET.get('id')
+    print(type(id))
+    mongoUtils.get_video_by_id(id)
+    preview_file_path = os.path.join(settings.MEDIA_ROOT, 'videos/preview.mp4')
+    file = open(preview_file_path,'rb')
+    response = HttpResponse(file, content_type='video/mp4')
+    #response["X-Frame-Options"] = "SAMEORIGIN"
+    return response
 
 def video_import_view(request):
     return render(request, "video/import.html")

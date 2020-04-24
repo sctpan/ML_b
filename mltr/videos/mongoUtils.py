@@ -5,7 +5,10 @@ from sshtunnel import SSHTunnelForwarder, create_logger
 import os
 from django.conf import settings
 from bson import json_util
+from bson.objectid import ObjectId
 import json
+import gridfs
+
 
 class MongoUtils:
     host = "ec2-18-188-66-52.us-east-2.compute.amazonaws.com"
@@ -43,7 +46,7 @@ class MongoUtils:
         videos = self.db['fs.files']
         res = []
         for report in reports.find({"postingAccount": phone}).sort('time', pymongo.DESCENDING):
-            video_info = {"id": report['_id'], "user": report['reporterName'], 'license_plate': report['licensePlateNumber'], 'created': report['time']}
+            video_info = {"id": report['videoClip'], "user": report['reporterName'], 'license_plate': report['licensePlateNumber'], 'created': report['time']}
             video = videos.find_one({'_id': report['videoClip']})
             # Once the backend is modified, speed data will be available in database, you should use the following code
             # video_info["init_speed"] = video['metadata']['initialSpeed']
@@ -55,6 +58,16 @@ class MongoUtils:
             res.append(video_info)
         print(len(res))
         return res
+    
+    @resource_handler
+    def get_video_by_id(self, id):
+        print("try to get video")
+        fs = gridfs.GridFSBucket(self.db)
+        preview_file_path = os.path.join(settings.MEDIA_ROOT, 'videos/preview.mp4')
+        file = open(preview_file_path, 'wb+')
+        fs.download_to_stream(ObjectId(id), file)
+
+
 
     # def convert_to_video_model(self, video_info):
 
