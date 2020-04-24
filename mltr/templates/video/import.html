@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    
+    <title>Hello, world!</title>
+    <style>
+        .search {
+            margin: 0;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        input {
+            width: 18px;
+            height: 18px;
+        }
+        h3 {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        .content {
+            width: 80%;
+            margin: 0 auto;
+        }
+        .table {
+            text-align: center;
+        }
+        .btns {
+            margin-bottom: 20px;
+        }
+        
+    </style>
+  </head>
+  <body>
+    <h3>Import Videos</h3>
+    <div class="search">
+        <div class="row">
+            <div class="col-4"></div>
+            <div class="col-3">
+                <input id="phone" type="text"  class="form-control" placeholder="User Phone">
+            </div>
+            <div class="col-1">
+                <button onclick="search()" class="btn btn-primary form-control">Search</button>
+            </div>
+        </div>
+    </div>
+    <div id="loading-spinner" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <div class="content"></div>
+    <div class="modal fade" id="editModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="staticBackdropLabel"></h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body"> 
+                <label for="title" class="col-form-label">title:</label>   
+                <input id="title" type="text"  class="form-control">
+                <label for="description" class="col-form-label">description:</label>
+                <input id="description" type="text"  class="form-control"> 
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              <button onclick="saveChange()" type="button" class="btn btn-primary">Submit</button>
+            </div>
+          </div>
+        </div>
+    </div>
+    
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    
+    <script>
+        videos_list = [];
+        currentIndex = -1;
+        $(document).ready(function() { 
+            console.log("ready");
+            $("#loading-spinner").hide();
+         });
+
+        
+
+         
+        
+        function search() {
+            $(".content").empty();
+            videos_list = []
+            let phone = $("#phone").val()
+            console.log(phone);
+            if(phone === "" || phone == null) {
+                alert("Please enter user's phone number");
+            } else {
+                $("#loading-spinner").show();
+                $.getJSON("/videos/search/?phone=" + phone, function(result){
+                    if(result.videos_list.length === 0) {
+                       alert("No videos");
+                    } else {
+                        videos_list = result.videos_list
+                        generateTable()
+                    }
+                    console.log(result);
+                    $("#loading-spinner").hide();
+                });
+            }
+        }
+
+        function generateTable() {
+            let buttons = $("<div class='btns'></div>");
+            let btn1 = "<button type='button' class='btn btn-danger' style='margin-right: 10px'>Select All</button>";
+            let btn2 = "<button type='button' class='btn btn-success'>Import Selected videos</button>"
+            buttons.append(btn1, btn2);
+            let table = $("<table class='table table-hover'></table>");
+            let tableHead = $("<thead><tr><th scope='col'>Select</th><th scope='col'>video</th><th scope='col'>uploaded by</th><th scope='col'>upload date</th><th scope='col'>action</th></tr></thead>");
+            let tableBody = $("<tbody></tbody>")
+            for(var i=0; i<videos_list.length; i++) {
+                let video = videos_list[i];
+                let row = $("<tr></tr>");
+                let checkbox = $("<td class='align-middle'><input value=' " + i + "' type='checkbox'/></td>");
+                let content = $("<td class='align-middle'>" + video.id.$oid + "</td><td class='align-middle'>" + video.user + "</td><td class='align-middle'>" + video.created + "</td>")
+                let editBtn = $("<td><button onclick='edit(" + i + ")' class='btn btn-primary' data-toggle='modal' data-target='#editModal'>Edit</button></td>");
+                row.append(checkbox, content, editBtn);   
+                tableBody.append(row);
+            }
+            table.append(tableHead, tableBody);
+            $(".content").append(buttons, table);
+        }
+
+        function edit(index) {
+            console.log(index);
+            $('#editModal').modal('show');
+            currentIndex = index;
+            let currentVideo = videos_list[index];
+            $(".modal-title").html("video " + currentVideo.id.$oid);
+            $(".modal-body #title").val(currentVideo.id.$oid);
+            $(".modal-body #description").val("Imported from carmacam database");
+        }
+
+        function saveChange() {
+            videos_list[currentIndex].title = $(".modal-body #title").val()
+            videos_list[currentIndex].description = $(".modal-body #description").val()
+        }
+
+        
+
+        
+    </script>
+
+
+</body>
+</html>

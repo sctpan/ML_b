@@ -7,6 +7,8 @@ from django.conf import settings
 from PIL import Image
 import json
 import os
+from .mongoUtils import MongoUtils
+from django.http import JsonResponse
 
 # Create your views here.
 def  video_detail_view(request, video_id):
@@ -42,7 +44,6 @@ def video_create_view(request):
     context = {
         "form":form
     }
-
     return render(request, "video/create.html", context)
 
 
@@ -52,6 +53,21 @@ def video_list_view(request):
         "object_list": queryset
     }
     return render(request, "video/show.html", context)
+
+def get_account_videos(request):
+    mongoUtils = MongoUtils()
+    videos = []
+    phone = request.GET.get('phone', None)
+    if phone != None:
+        videos = mongoUtils.find_videos_by_phone(phone)
+    print(len(videos))
+    context = {
+        "videos_list": videos
+    }
+    return JsonResponse(context)
+
+def video_import_view(request):
+    return render(request, "video/import.html")
 
 
 def  video_yolo_view(request, video_id):

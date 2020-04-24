@@ -7,7 +7,15 @@ class Video(models.Model):
     video = models.FileField(upload_to='videos/', null=True, blank=False, default=None)
     # thumbnail = models.ImageField(upload_to='images', default='default.jpg')
     created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    # user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    
+    ### add
+    license_plate = models.CharField(max_length=20, blank=True, null=True, default=None)
+    avg_speed = models.CharField(max_length=10, blank=True, null=True, default=None)
+    c_top = models.IntegerField(blank=True, null=True, default=None)
+    c_left = models.IntegerField(blank=True, null=True, default=None)
+    c_bot = models.IntegerField(blank=True, null=True, default=None)
+    c_right = models.IntegerField(blank=True, null=True, default=None)
+    c_frame = models.IntegerField(blank=True, null=True, default=None)
 
     def get_absolute_url(self):
         return reverse("video_detail", kwargs={"video_id": self.id}) #f"/videos/{self.id}"
