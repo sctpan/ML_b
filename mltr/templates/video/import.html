@@ -108,7 +108,7 @@
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="staticBackdropLabel">Import Videos</h5>
+              <h5 class="modal-title">Import Videos</h5>
             </div>
             <div class="modal-body"> 
                 <div id="imported-video-number"></div>
@@ -205,14 +205,25 @@
             $('#editModal').modal('show');
             currentIndex = index;
             let currentVideo = videos_list[index];
-            $(".modal-title").html("video " + currentVideo.id.$oid);
-            $(".modal-body #title").val(currentVideo.id.$oid);
-            $(".modal-body #description").val("Imported from carmacam database");
+            $("#editModal .modal-title").html("video " + currentVideo.id.$oid);
+            if(currentVideo.title == null || currentVideo.title == undefined) {
+                $("#editModal .modal-body #title").val(currentVideo.id.$oid);
+            } else {
+                $("#editModal .modal-body #title").val(currentVideo.title);
+            }
+            if(currentVideo.description == null || currentVideo.description == undefined) {
+                $("#editModal .modal-body #description").val("Imported from carmacam database");
+            } else {
+                $("#editModal .modal-body #description").val(currentVideo.description);
+            }
+            
+            
         }
 
         function saveChange() {
             videos_list[currentIndex].title = $(".modal-body #title").val()
             videos_list[currentIndex].description = $(".modal-body #description").val()
+            $('#editModal').modal('hide');
         }
 
         function selectAll() {
@@ -275,9 +286,11 @@
                 return;
             }
             $.ajax({
-                type: "GET",
-                url: "https://cloudserver.carma-cam.com/downloadFile/5ea0bdbf5f487e13c6150f54",
-                // data: data,
+                type: "POST",
+                url: "/videos/save/",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(import_videos_list[index])
             }).done(function(result) {
                 let percent = Math.round((index + 1) * 1.0 / import_videos_list.length * 100);
                 $(".progress-bar").width(percent + "%");

@@ -6,11 +6,13 @@ import cv2
 from django.conf import settings
 from PIL import Image
 import json
+import bson
 import os
 from .mongoUtils import MongoUtils
 from django.http import JsonResponse
 from django.http import HttpResponse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.views.decorators.csrf import csrf_exempt
 
 
 # Create your views here.
@@ -73,13 +75,20 @@ def get_account_videos(request):
 def get_video(request):
     mongoUtils = MongoUtils()
     id = request.GET.get('id')
-    print(type(id))
-    mongoUtils.get_video_by_id(id)
+    mongoUtils.get_video_by_id(id, 'videos/preview.mp4')
     preview_file_path = os.path.join(settings.MEDIA_ROOT, 'videos/preview.mp4')
     file = open(preview_file_path,'rb')
     response = HttpResponse(file, content_type='video/mp4')
-    #response["X-Frame-Options"] = "SAMEORIGIN"
     return response
+
+@csrf_exempt
+def import_video(request):
+    mongoUtils = MongoUtils()
+    print(request.body)
+    video_info = json.loads(request.body)
+    print(video_info)
+    mongoUtils.convert_to_video_model(video_info)
+    return JsonResponse({"status": "success"})
 
 def video_import_view(request):
     return render(request, "video/import.html")

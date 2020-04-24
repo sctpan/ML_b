@@ -8,6 +8,7 @@ from videos.views import  (video_detail_view,
                            video_import_view,
                            get_account_videos,
                            get_video,
+                           import_video,
                            video_update_view,
                            video_yolo_view,
                            )
@@ -20,6 +21,7 @@ urlpatterns = [
     path('import/', video_import_view, name="import"),
     path('search/', get_account_videos),
     path('preview/', get_video),
+    path('save/', import_video),
     path('<int:video_id>/yolo/', video_yolo_view, name='video_yolo'),
                   # path('<int:video_id>', video_detail_view, name='detail'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

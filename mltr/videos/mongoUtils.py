@@ -8,6 +8,8 @@ from bson import json_util
 from bson.objectid import ObjectId
 import json
 import gridfs
+from .models import Video
+from django.utils.dateparse import parse_datetime
 
 
 class MongoUtils:
@@ -60,16 +62,27 @@ class MongoUtils:
         return res
     
     @resource_handler
-    def get_video_by_id(self, id):
+    def get_video_by_id(self, id, filename):
         print("try to get video")
         fs = gridfs.GridFSBucket(self.db)
-        preview_file_path = os.path.join(settings.MEDIA_ROOT, 'videos/preview.mp4')
+        preview_file_path = os.path.join(settings.MEDIA_ROOT, filename)
         file = open(preview_file_path, 'wb+')
         fs.download_to_stream(ObjectId(id), file)
 
+    def convert_to_video_model(self, video_info):
+        video = Video()
+        video.title = video_info['title']
+        video.description = video_info['description']
+        video.created = parse_datetime(video_info['created'])
+        video.location = video_info['location']
+        video.license_plate = video_info['license_plate']
+        self.get_video_by_id(str(video_info['id']['$oid']), "videos/" + video_info['title'] + ".mp4")
+        video.video.name = "videos/" + video_info['title'] + ".mp4"
+        video.save()
+        
 
 
-    # def convert_to_video_model(self, video_info):
+        
 
 
 
